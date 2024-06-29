@@ -22,18 +22,18 @@ for volume in *; do
         echo Volume $volume already exists. Skipping...
         continue
         # TODO Prompt to overwrite
+    else
+        # Get the latest backup
+        backup_file=$(ls -Art $volume | tail -n 1)
+        echo Restoring backup for volume: $volume, backup file: $backup_file
+
+        # Create a new volume with the extracted volume name
+        docker volume create "$volume"
+
+        # Restore the backup to the new volume
+        docker run --rm -it \
+        -v $volume:/restore -v ./$volume:/backup \
+        alpine \
+        tar xzvf /backup/"$backup_file" -C /restore
     fi
-
-    # Get the latest backup
-    backup_file=$(ls -Art $volume | tail -n 1)
-    echo Restoring backup for volume: $volume, backup file: $backup_file
-
-    # Create a new volume with the extracted volume name
-    docker volume create "$volume"
-
-    # Restore the backup to the new volume
-    docker run --rm -it \
-    -v $volume:/restore -v ./$volume:/backup \
-    alpine \
-    tar xzvf /backup/"$backup_file" -C /restore
 done
